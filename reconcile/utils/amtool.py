@@ -36,7 +36,9 @@ def check_config(yaml_config: str, amtool_version: str) -> AmtoolResult:
     return result
 
 
-def config_routes_test(yaml_config: str, labels: Mapping[str, str], amtool_version : str="0.24.0") -> AmtoolResult:
+def config_routes_test(
+    yaml_config: str, labels: Mapping[str, str], amtool_version: str = "0.24.0"
+) -> AmtoolResult:
     if not (version_check := check_amtool_version(amtool_version)):
         return version_check
 
@@ -44,7 +46,14 @@ def config_routes_test(yaml_config: str, labels: Mapping[str, str], amtool_versi
     with tempfile.NamedTemporaryFile(mode="w+") as fp:
         fp.write(yaml_config)
         fp.flush()
-        cmd = [f"amtool-{amtool_version}", "config", "routes", "test", "--config.file", fp.name]
+        cmd = [
+            f"amtool-{amtool_version}",
+            "config",
+            "routes",
+            "test",
+            "--config.file",
+            fp.name,
+        ]
         cmd.extend(labels_lst)
         result = _run_cmd(cmd)
 
@@ -68,7 +77,9 @@ def check_amtool_version(version: str) -> AmtoolResult:
     """Checks if a given version of amtool is present"""
     all_versions = versions()
     if version not in map(str, all_versions):
-        return AmtoolResult(False, f"Could not find amtool {version}. Available: {all_versions}")
+        return AmtoolResult(
+            False, f"Could not find amtool {version}. Available: {all_versions}"
+        )
     return AmtoolResult(True, version)
 
 

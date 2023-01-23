@@ -6,7 +6,10 @@ from reconcile.utils import amtool
 
 def test_minimal_version() -> None:
     versions = amtool.versions()
-    assert all(semver.VersionInfo.parse(str(version)).compare("0.24.0") >= 0 for version in versions)
+    assert all(
+        semver.VersionInfo.parse(str(version)).compare("0.24.0") >= 0
+        for version in versions
+    )
 
 
 def test_check_good_config() -> None:

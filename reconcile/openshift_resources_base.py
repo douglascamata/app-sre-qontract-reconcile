@@ -377,7 +377,9 @@ def process_extracurlyjinja2_template(body, vars=None, env=None, settings=None):
     return process_jinja2_template(body, vars=vars, extra_curly=True, settings=settings)
 
 
-def check_alertmanager_config(data, path, alertmanager_config_key, decode_base64=False, version="0.24.0"):
+def check_alertmanager_config(
+    data, path, alertmanager_config_key, decode_base64=False, version="0.24.0"
+):
     try:
         config = data[alertmanager_config_key]
     except KeyError:
@@ -454,7 +456,9 @@ def fetch_provider_resource(
             am_data = body["data"]
             decode_base64 = False
 
-        check_alertmanager_config(am_data, path, alertmanager_config_key, decode_base64, alertmanager_version)
+        check_alertmanager_config(
+            am_data, path, alertmanager_config_key, decode_base64, alertmanager_version
+        )
 
     if add_path_to_prom_rules:
         if body["kind"] == "PrometheusRule":
