@@ -378,7 +378,7 @@ def process_extracurlyjinja2_template(body, vars=None, env=None, settings=None):
 
 
 def check_alertmanager_config(
-    data, path, alertmanager_config_key, decode_base64=False, version="0.24.0"
+    data, path, alertmanager_config_key, decode_base64=False, version=amtool.MIN_VERSION
 ):
     try:
         config = data[alertmanager_config_key]
@@ -405,7 +405,7 @@ def fetch_provider_resource(
     validate_json=False,
     validate_alertmanager_config=False,
     alertmanager_config_key="alertmanager.yaml",
-    alertmanager_version="0.24.0",
+    alertmanager_version=amtool.MIN_VERSION,
     add_path_to_prom_rules=True,
     skip_validation=False,
     settings=None,
@@ -498,6 +498,7 @@ def fetch_provider_vault_secret(
     integration_version,
     validate_alertmanager_config=False,
     alertmanager_config_key="alertmanager.yaml",
+    alertmanager_version=amtool.MIN_VERSION,
     settings=None,
 ) -> OR:
     # get the fields from vault
@@ -505,7 +506,7 @@ def fetch_provider_vault_secret(
     raw_data = secret_reader.read_all({"path": path, "version": version})
 
     if validate_alertmanager_config:
-        check_alertmanager_config(raw_data, path, alertmanager_config_key)
+        check_alertmanager_config(raw_data, path, alertmanager_config_key, version=alertmanager_version)
 
     # construct oc resource
     body = {
@@ -603,7 +604,9 @@ def fetch_openshift_resource(
         alertmanager_config_key = (
             resource.get("alertmanager_config_key") or "alertmanager.yaml"
         )
-        alertjmanager_version = resource.get("alertmanager_version") or "0.24.0"
+        alertjmanager_version = (
+            resource.get("alertmanager_version") or amtool.MIN_VERSION
+        )
         openshift_resource = fetch_provider_resource(
             resource["resource"],
             validate_json=validate_json,
@@ -623,6 +626,9 @@ def fetch_openshift_resource(
         )
         alertmanager_config_key = (
             resource.get("alertmanager_config_key") or "alertmanager.yaml"
+        )
+        alertjmanager_version = (
+            resource.get("alertmanager_version") or amtool.MIN_VERSION
         )
         tv = {}
         if resource["variables"]:
@@ -644,6 +650,7 @@ def fetch_openshift_resource(
                 tvars=tv,
                 validate_alertmanager_config=validate_alertmanager_config,
                 alertmanager_config_key=alertmanager_config_key,
+                alertmanager_version=alertjmanager_version,
                 add_path_to_prom_rules=add_path_to_prom_rules,
                 skip_validation=skip_validation,
                 settings=settings,
@@ -669,6 +676,9 @@ def fetch_openshift_resource(
         alertmanager_config_key = (
             resource.get("alertmanager_config_key") or "alertmanager.yaml"
         )
+        alertjmanager_version = (
+            resource.get("alertmanager_version") or amtool.MIN_VERSION
+        )
         try:
             openshift_resource = fetch_provider_vault_secret(
                 path,
@@ -681,6 +691,7 @@ def fetch_openshift_resource(
                 integration_version=QONTRACT_INTEGRATION_VERSION,
                 validate_alertmanager_config=validate_alertmanager_config,
                 alertmanager_config_key=alertmanager_config_key,
+                alertmanager_version=alertjmanager_version,
                 settings=settings,
             )
         except (SecretVersionNotFound, SecretVersionIsNone) as e:
