@@ -1,4 +1,3 @@
-import pytest
 import semver
 
 from reconcile.test.fixtures import Fixtures
@@ -6,21 +5,19 @@ from reconcile.utils import amtool
 
 
 def test_minimal_version() -> None:
-    if result := amtool.version():
-        assert semver.VersionInfo.parse(str(result)).compare("0.24.0") >= 0
-    else:
-        pytest.fail(f"Error getting amtool version {result}")
+    versions = amtool.versions()
+    assert all(semver.VersionInfo.parse(str(version)).compare("0.24.0") >= 0 for version in versions)
 
 
 def test_check_good_config() -> None:
     am_config = Fixtures("amtool").get("alertmanager.yaml")
-    result = amtool.check_config(am_config)
+    result = amtool.check_config(am_config, "0.24.0")
     assert result
 
 
 def test_check_bad_config() -> None:
     am_config = "bad: config"
-    result = amtool.check_config(am_config)
+    result = amtool.check_config(am_config, "0.24.0")
     assert not result
 
 

@@ -1,4 +1,4 @@
-import re
+import os
 import tempfile
 from collections.abc import Mapping
 from subprocess import (
@@ -22,39 +22,54 @@ class AmtoolResult:
         return self.is_ok
 
 
-def check_config(yaml_config: str) -> AmtoolResult:
+def check_config(yaml_config: str, amtool_version: str) -> AmtoolResult:
     """Run amtool check rules on the given yaml string"""
+    if not (version_check := check_amtool_version(amtool_version)):
+        return version_check
 
     with tempfile.NamedTemporaryFile(mode="w+") as fp:
         fp.write(yaml_config)
         fp.flush()
-        cmd = ["amtool", "check-config", fp.name]
+        cmd = [f"amtool-{amtool_version}", "check-config", fp.name]
         result = _run_cmd(cmd)
 
     return result
 
 
-def config_routes_test(yaml_config: str, labels: Mapping[str, str]) -> AmtoolResult:
+def config_routes_test(yaml_config: str, labels: Mapping[str, str], amtool_version : str="0.24.0") -> AmtoolResult:
+    if not (version_check := check_amtool_version(amtool_version)):
+        return version_check
+
     labels_lst = [f"{key}={value}" for key, value in labels.items()]
     with tempfile.NamedTemporaryFile(mode="w+") as fp:
         fp.write(yaml_config)
         fp.flush()
-        cmd = ["amtool", "config", "routes", "test", "--config.file", fp.name]
+        cmd = [f"amtool-{amtool_version}", "config", "routes", "test", "--config.file", fp.name]
         cmd.extend(labels_lst)
         result = _run_cmd(cmd)
 
     return result
 
 
-def version() -> AmtoolResult:
-    """Returns the version parsed from amtool --version"""
-    result = _run_cmd(["amtool", "--version"])
+def versions() -> list[AmtoolResult]:
+    """Returns the available versions of amtool"""
+    available_versions = []
+    for path in os.environ["PATH"].split(os.pathsep):
+        files = os.listdir(path)
+        for file in files:
+            filename = os.path.basename(file)
+            if filename.startswith("amtool-"):
+                version = filename.split("-")[1]
+                available_versions.append(AmtoolResult(True, version))
+    return available_versions
 
-    pattern = re.compile("^amtool, version (?P<version>[^ ]+) .+")
-    if m := pattern.match(result.message):
-        return AmtoolResult(True, m.group("version"))
 
-    return AmtoolResult(False, f"Unexpected amtool --version output {result.message}")
+def check_amtool_version(version: str) -> AmtoolResult:
+    """Checks if a given version of amtool is present"""
+    all_versions = versions()
+    if version not in map(str, all_versions):
+        return AmtoolResult(False, f"Could not find amtool {version}. Available: {all_versions}")
+    return AmtoolResult(True, version)
 
 
 def _run_cmd(cmd: list[str]) -> AmtoolResult:

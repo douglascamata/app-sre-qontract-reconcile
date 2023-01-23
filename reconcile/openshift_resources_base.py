@@ -377,7 +377,7 @@ def process_extracurlyjinja2_template(body, vars=None, env=None, settings=None):
     return process_jinja2_template(body, vars=vars, extra_curly=True, settings=settings)
 
 
-def check_alertmanager_config(data, path, alertmanager_config_key, decode_base64=False):
+def check_alertmanager_config(data, path, alertmanager_config_key, decode_base64=False, version="0.24.0"):
     try:
         config = data[alertmanager_config_key]
     except KeyError:
@@ -390,7 +390,7 @@ def check_alertmanager_config(data, path, alertmanager_config_key, decode_base64
     if decode_base64:
         config = base64.b64decode(config).decode("utf-8")
 
-    result = amtool.check_config(config)
+    result = amtool.check_config(config, version)
     if not result:
         e_msg = f"error validating alertmanager config in {path}: {result}"
         raise FetchResourceError(e_msg)
@@ -403,6 +403,7 @@ def fetch_provider_resource(
     validate_json=False,
     validate_alertmanager_config=False,
     alertmanager_config_key="alertmanager.yaml",
+    alertmanager_version="0.24.0",
     add_path_to_prom_rules=True,
     skip_validation=False,
     settings=None,
@@ -453,7 +454,7 @@ def fetch_provider_resource(
             am_data = body["data"]
             decode_base64 = False
 
-        check_alertmanager_config(am_data, path, alertmanager_config_key, decode_base64)
+        check_alertmanager_config(am_data, path, alertmanager_config_key, decode_base64, alertmanager_version)
 
     if add_path_to_prom_rules:
         if body["kind"] == "PrometheusRule":
@@ -598,11 +599,13 @@ def fetch_openshift_resource(
         alertmanager_config_key = (
             resource.get("alertmanager_config_key") or "alertmanager.yaml"
         )
+        alertjmanager_version = resource.get("alertmanager_version") or "0.24.0"
         openshift_resource = fetch_provider_resource(
             resource["resource"],
             validate_json=validate_json,
             validate_alertmanager_config=validate_alertmanager_config,
             alertmanager_config_key=alertmanager_config_key,
+            alertmanager_version=alertjmanager_version,
             add_path_to_prom_rules=add_path_to_prom_rules,
             skip_validation=skip_validation,
             settings=settings,
