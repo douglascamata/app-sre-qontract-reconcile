@@ -248,6 +248,11 @@ It consists of:
 - [requirements-format.txt](requirements/requirements-format.txt) for formatting dependencies
 - [requirements-dev.txt](requirements/requirements-dev.txt) installs all above mentioned dependencies
 
+Besides the requirement files, to run the full suite of unit tests it's required to Install:
+
+- [Helm 3](https://helm.sh/docs/intro/install/)
+- [AlertManager's amtool `v0.24.0` precompiled binary](https://github.com/prometheus/alertmanager#precompiled-binaries). Compiling yourself or using `go install [...]` won't work.
+
 ### Image build
 
 In order to speed up frequent builds and avoid issues with dependencies, docker image makes use
